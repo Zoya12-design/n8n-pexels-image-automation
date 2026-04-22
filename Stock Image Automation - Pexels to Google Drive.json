@@ -1,0 +1,282 @@
+{
+  "name": "Stock Image Automation - Pexels to Google Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "inputPlaceholder": "Enter a keyword (e.g., car)",
+          "subtitle": "Enter a keyword to search and download images from Pexels",
+          "title": "Stock Image Downloader"
+        }
+      },
+      "id": "bd4a47dd-6a8e-4a36-be13-34de4b5956ae",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        472
+      ],
+      "webhookId": "0e046e56-d408-4383-9537-1af4ccff9236"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/v1/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.chatInput }}"
+            },
+            {
+              "name": "per_page",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "abb5f959-d93b-42e8-8d5f-2a7b436e121f",
+      "name": "Search Pexels API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        464,
+        472
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "njCArJSEk1FADW7O",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.total_results }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33e6c8d3-f098-4867-bc46-5350b34fdf0d",
+      "name": "Check Images Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        472
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const keyword = $input.first().json.chatInput || 'image';\nconst photos = $input.first().json.photos || [];\n\nreturn photos.map((photo, index) => ({\n  json: {\n    url: photo.src.original,\n    fileName: `${keyword}_${index + 1}.jpg`\n  }\n}));"
+      },
+      "id": "bcda0a77-7326-44ef-91d1-1bfa3ac70ccc",
+      "name": "Format Image Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        376
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "134894df-95ed-499e-8db9-cd79ebc5d4dc",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1D8dIZ-4juNPLZv2131TnyU8g-8B0Psdf",
+          "mode": "list",
+          "cachedResultName": "automation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1D8dIZ-4juNPLZv2131TnyU8g-8B0Psdf"
+        },
+        "options": {
+          "simplifyOutput": true
+        }
+      },
+      "id": "ad3bde11-fa6e-4bc6-9fab-b23f85e3e7cf",
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1584,
+        384
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qmHEDRjdooLenR9C",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f4263200-be50-496b-b120-9bf3738d2223",
+      "name": "Loop Through Images",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1136,
+        376
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ \"No images found for keyword: \" + $(\"Chat Trigger\").item.json.chatInput }}"
+      },
+      "id": "700b8157-1143-40de-a206-0028e295bfab",
+      "name": "No Images Found",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        912,
+        568
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search Pexels API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Pexels API": {
+      "main": [
+        [
+          {
+            "node": "Check Images Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Images Found": {
+      "main": [
+        [
+          {
+            "node": "Format Image Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Images Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Image Data": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Upload to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Through Images": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "329b0817-b8de-4dcb-9a6a-619a78cc17d1",
+  "meta": {
+    "instanceId": "f86d99c95c5cc69b089f7c4965bbd877b964580b1a240af93415d7930e6fa613"
+  },
+  "id": "r2HCibvhox2DmfFZ",
+  "tags": []
+}
