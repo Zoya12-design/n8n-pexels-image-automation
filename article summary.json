@@ -1,0 +1,345 @@
+{
+  "name": "article summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d68a03d6-666d-49d7-90ff-b4ed47094dab",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8",
+          "mode": "list",
+          "cachedResultName": "article summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "642a8714-43e2-4887-be76-3e8c59375cc0",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "T1HgHZLmtOR9nf0b",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.article }}",
+        "options": {
+          "systemMessage": "=You are an intelligent research and summarization assistant.\n\nYour task is to read the content from a provided article and generate a clear, meaningful, and well-structured summary.\n\nGuidelines:\n1. Understand the full context of the article before summarizing.\n2. Produce a concise but information-rich summary (not too short, not overly long).\n3. Focus on:\n   - Main idea and purpose of the article\n   - Key arguments, facts, or findings\n   - Important insights or conclusions\n4. Maintain clarity and simple English (avoid unnecessary jargon).\n5. Do NOT copy sentences directly; rewrite in your own words.\n6. Ensure the summary is logically structured (use paragraphs, not bullet spam).\n\nLong-Term Perspective Requirement:\n7. Highlight the broader impact or future relevance of the content.\n   - Why does this topic matter in the long run?\n   - How could it affect industries, society, or technology?\n8. If applicable, include trends, implications, or potential future developments.\n\nOutput Format:\n- Single well-written paragraph OR 2 short paragraphs maximum\n- No headings, no extra labels, no markdown\n- Directly usable as a summary field in a database\n\nStrict Rules:\n- No hallucinations (only use information from the article)\n- No personal opinions unless clearly derived from the content\n- Keep it professional, neutral, and informative\n\nYour goal: Deliver a summary that is both immediately useful and valuable for long-term understanding."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "979b6613-ffa8-493f-81f3-7cf0ef7a848e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1192,
+        224
+      ],
+      "id": "67f5a5c8-0c4f-41d8-a1c2-75225b0413ad",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Db0JHWLkTrzcn6OH",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8",
+          "mode": "list",
+          "cachedResultName": "article summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YFgFMBYKapNRce0P8ykc2Cc8cxyX2YkXFQuODvsdGW8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "summary": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "link"
+          ],
+          "schema": [
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1472,
+        0
+      ],
+      "id": "a4a7c9ac-dc8e-41fc-9549-aefa87c246a3",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "T1HgHZLmtOR9nf0b",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "htmlContent"
+            }
+          }
+        }
+      },
+      "id": "34e36557-c2fe-4e2a-a384-591d4d84f0d1",
+      "name": "Fetch Article Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const html = $input.item.json.htmlContent;\nconst article = html.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();\nreturn { article };"
+      },
+      "id": "0eca713b-45ba-4311-b18c-90cb634988ff",
+      "name": "Clean HTML Extract Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "ignoreCase": true,
+            "looseTypeValidation": true
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.link }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "2",
+              "leftValue": "={{ $json.link }}",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "rightValue": "http"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "da5aa39d-ffcb-4077-9d06-b7d75a91e604",
+      "name": "Filter Valid Links",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Fetch Article Content": {
+      "main": [
+        [
+          {
+            "node": "Clean HTML Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean HTML Extract Text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links": {
+      "main": [
+        [
+          {
+            "node": "Fetch Article Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "211aa611-ca4e-44bd-abc6-927d04106b00",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f86d99c95c5cc69b089f7c4965bbd877b964580b1a240af93415d7930e6fa613"
+  },
+  "id": "sR4udHS18tiQcBel",
+  "tags": []
+}
