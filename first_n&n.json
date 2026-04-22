@@ -1,0 +1,272 @@
+{
+  "name": "first_n&n",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        72
+      ],
+      "id": "5aba7d7a-8910-4c41-9fdb-1f2c1c512b48",
+      "name": "When chat message received",
+      "webhookId": "c306a776-9b4e-4a7c-ab68-10c69fffc6af"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "you are a helpful assistant that display images in the chat box using pexel apiin http request each time"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        72
+      ],
+      "id": "fd55ead3-3aa1-46a1-90a9-68b5c651056a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.chatInput }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "t7nr1sLmVD0vtVMnvhK88EKs1i06X6risucG5Bi0f93Sbn0VCIVSBM9W"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        360,
+        296
+      ],
+      "id": "dd932828-3406-4ca2-b95d-6a35117f7512",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        232,
+        296
+      ],
+      "id": "b20ba544-c0cf-463e-a344-d6ab43d4b727",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Db0JHWLkTrzcn6OH",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst text = input[0].json.output || '';\n\nconst urlRegex = /https?:\\/\\/[^\\s<>\"]+?\\.(?:jpg|jpeg|png|gif|webp)(?:\\?[^\\s<>\"]*)?/gi;\nconst matches = text.match(urlRegex) || [];\n\nconst uniqueUrls = [...new Set(matches.map(url => url.trim()))];\n\nreturn uniqueUrls.map(url => ({ json: { url } }));"
+      },
+      "id": "b317cc87-4f9f-44fd-8dae-edae64aa3b67",
+      "name": "Extract Image URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        72
+      ]
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.url.split(\"/\").pop().split(\"?\")[0] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "id": "c3be6d1b-cb03-421e-bc28-1998ac152066",
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1248,
+        80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qmHEDRjdooLenR9C",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "a0261714-a0a7-4d3d-8cc4-ab4a8752086a",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a2191e66-1a86-432b-bdf6-07d1cef2fa90",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        800,
+        72
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Image URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Image URLs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Upload to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d7574534-aa63-4349-86f0-161ec386e0cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f86d99c95c5cc69b089f7c4965bbd877b964580b1a240af93415d7930e6fa613"
+  },
+  "id": "LuVe7Bbs2ZxviQLh",
+  "tags": []
+}
